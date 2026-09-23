@@ -1,0 +1,48 @@
+name: PC Virtual
+
+on:
+  workflow_dispatch:
+    inputs:
+      access_password:
+        description: "Defina uma senha para acessar o PC"
+        required: true
+        default: "123456"
+
+jobs:
+  virtual-pc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configurar senha do usuário
+        run: |
+          echo "runner:${{ github.event.inputs.access_password }}" | sudo chpasswd
+
+      - name: Instalar ambiente gráfico
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ubuntu-desktop \
+            xrdp \
+            dbus-x11
+
+          sudo systemctl enable xrdp
+          sudo systemctl restart xrdp
+
+      - name: Configurar sessão gráfica
+        run: |
+          echo "startxfce4" > ~/.xsession
+
+      - name: Instalar XFCE
+        run: |
+          sudo apt-get install -y xfce4 xfce4-goodies
+          echo "xfce4-session" > ~/.xsession
+
+      - name: Manter máquina ligada
+        run: |
+          echo "PC virtual iniciado."
+          echo "O runner ficará ativo por até 6 horas."
+          sleep 21600
